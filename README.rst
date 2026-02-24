@@ -59,6 +59,21 @@ explanation in `this FAQ item <https://trading-ig.readthedocs.io/en/latest/faq.h
 
 For full details, see `pyproject.toml <https://github.com/ig-python/trading-ig/blob/master/pyproject.toml>`_
 
+Trading Board Extension (Redis + PostgreSQL)
+-------------------------------------------
+
+This repository now includes a reference architecture for a hybrid trading board:
+
+* ``analysis_team`` publishes AI-generated trade intents to Redis
+* ``trading_board`` subscribes to Redis channels and executes via ``trading_ig``
+* order lifecycle and audit events are persisted in PostgreSQL
+
+To install the optional dependencies for this flow::
+
+    $ poetry install --extras "trading-board"
+
+A bootstrap example is available at ``sample/trading_board_hybrid.py``.
+
 Installation
 ------------
 
