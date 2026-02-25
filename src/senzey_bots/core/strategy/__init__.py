@@ -1,1 +1,1 @@
-"""Strategy package."""
+"""Strategy domain — validation and lifecycle management."""

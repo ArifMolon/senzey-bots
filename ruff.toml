@@ -12,3 +12,7 @@ exclude = [
 
 [lint]
 select = ["E", "W", "F", "I", "N", "UP"]
+
+[lint.per-file-ignores]
+# Streamlit page files use numeric prefixes (NN_name.py) by convention — N999 is expected
+"src/senzey_bots/ui/pages/10_generate.py" = ["N999"]
