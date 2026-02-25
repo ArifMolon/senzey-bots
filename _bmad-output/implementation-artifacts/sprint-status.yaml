@@ -46,9 +46,9 @@ development_status:
   1-3-standardize-internal-messaging-contracts-and-typed-errors: done
   epic-1-retrospective: optional
   epic-2: in-progress
-  2-1-build-strategy-input-workspace: ready-for-dev
-  2-2-generate-executable-freqtrade-strategy-via-llm: backlog
-  2-3-display-real-time-agent-communication-timeline: backlog
+  2-1-build-strategy-input-workspace: review
+  2-2-generate-executable-freqtrade-strategy-via-llm: ready-for-dev
+  2-3-display-real-time-agent-communication-timeline: in-progress
   epic-2-retrospective: optional
   epic-3: backlog
   3-1-run-backtests-and-present-decision-ready-results: backlog
