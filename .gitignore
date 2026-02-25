@@ -59,6 +59,7 @@ target/
 # config
 *_config.*
 *_config.old.*
+!src/**/*_config.py
 
 # Mac OS
 .DS_Store
@@ -79,3 +80,6 @@ Pipfile.lock
 
 # poetry
 poetry.lock
+
+# Auto Claude data directory
+.auto-claude/
