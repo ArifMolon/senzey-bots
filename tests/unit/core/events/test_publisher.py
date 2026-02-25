@@ -102,16 +102,18 @@ def test_written_jsonl_is_deserializable_to_event_envelope(
 
 def test_publish_event_logs_correlation_id(
     isolated_audit_base: Path,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    import logging
+    """Logger emits event_published JSON with correlation_id and all key fields."""
+    from unittest.mock import patch
 
     envelope = _make_envelope()
-    with caplog.at_level(logging.INFO, logger="senzey_bots.core.events.publisher"):
+    with patch.object(publisher_module, "logger") as mock_logger:
         publish_event(envelope)
 
-    # The logger uses a custom JSON formatter that writes to stdout, not to caplog.
-    # Instead verify via the written file that correlation_id is present.
-    audit_file = isolated_audit_base / "2026" / "02" / "25" / "events.jsonl"
-    content = json.loads(audit_file.read_text(encoding="utf-8").strip())
-    assert content["correlation_id"] == envelope.correlation_id
+    mock_logger.info.assert_called_once()
+    logged_msg: str = mock_logger.info.call_args[0][0]
+    parsed = json.loads(logged_msg)
+    assert parsed["event"] == "event_published"
+    assert parsed["correlation_id"] == envelope.correlation_id
+    assert parsed["event_id"] == envelope.event_id
+    assert parsed["event_name"] == envelope.event_name

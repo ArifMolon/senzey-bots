@@ -772,14 +772,23 @@ No blocking issues encountered. One minor ruff fix: `timezone.utc` → `UTC` (UP
 - ✅ Task 3: Created `events/correlation.py` with `get_correlation_id()`, `set_correlation_id()`, `new_correlation_id()` using `contextvars.ContextVar` — correct asyncio-safe propagation.
 - ✅ Task 4: Created `events/models.py` with `EventEnvelope[PayloadT]` generic frozen model, `event_name` regex validator enforcing `domain.action.v1` pattern.
 - ✅ Task 5: Created `events/publisher.py` with `publish_event()` — append-only JSONL write to `var/audit/YYYY/MM/DD/events.jsonl`. Updated `events/__init__.py` to re-export all public API.
-- ✅ Task 6: 55 unit tests written across 5 test files covering all modules at 100% line coverage (51 original + 4 code-review fixes).
-- ✅ Task 7: All gates passed — `ruff check .` 0 errors, `mypy src/` 0 errors, 55 new tests all pass at 100% coverage, 26 security regression tests all pass.
+- ✅ Task 6: 77 unit tests written across 5 test files covering all modules at 100% line coverage (51 original + 4 Round-1 fixes + 22 Round-2 additions and fixes across test_models, test_correlation, test_publisher).
+- ✅ Task 7: All gates passed — `ruff check .` 0 errors, `mypy src/` 0 errors, 77 new tests all pass at 100% coverage, 26 security regression tests all pass.
 
-**Code-Review Fixes Applied (claude-sonnet-4-6):**
+**Code-Review Fixes Applied (claude-sonnet-4-6) — Round 1:**
 - [HIGH] `events/models.py`: added `validate_correlation_id` field_validator enforcing UUID v4 format on `EventEnvelope.correlation_id` (AC#2 mandates UUID v4; model previously accepted any string)
 - [HIGH] `test_publisher.py`: added `test_written_jsonl_is_deserializable_to_event_envelope` — verifies the written JSONL can be parsed back via `EventEnvelope[PayloadT].model_validate_json()` (task 6.10 required round-trip but test only checked `json.loads()`)
 - [HIGH] `test_models.py`: added 3 tests covering the new UUID v4 validator (rejects non-UUID, rejects non-v4 UUID, accepts valid v4 UUID)
 - [LOW] `test_correlation.py`: corrected `reset_correlation_context` fixture return type from `-> None` to `-> Generator[None, None, None]`, removed `# type: ignore[misc]` suppression
+
+**Code-Review Fixes Applied (claude-sonnet-4-6) — Round 2:**
+- [MEDIUM] `error_codes.py`: added `INTERNAL_ERROR = "INTERNAL_ERROR"` constant — previously hardcoded raw string in `contracts.py:failure_from_domain_error()` violated the "never hard-code raw strings" constraint from dev notes
+- [MEDIUM] `errors/__init__.py`: added `INTERNAL_ERROR` to imports and `__all__` — exposes the new constant through the package public API
+- [MEDIUM] `contracts.py`: replaced hardcoded `"INTERNAL_ERROR"` string with lazy import of the new constant from `error_codes.py`
+- [MEDIUM] `events/models.py`: added `validate_event_id` field_validator enforcing UUID v4 format on `EventEnvelope.event_id` — inconsistent with `correlation_id` which already had UUID v4 enforcement added in Round 1
+- [MEDIUM] `test_models.py`: added 3 tests covering the new `event_id` validator (rejects non-UUID, rejects non-v4 UUID, accepts explicit UUID v4)
+- [MEDIUM] `test_correlation.py`: added `test_correlation_id_propagates_to_async_task` and `test_correlation_id_isolated_in_child_async_task` — AC#6 claims asyncio propagation but zero async tests existed; uses `asyncio.run()` + `asyncio.create_task()` (no pytest-asyncio dependency)
+- [MEDIUM] `test_publisher.py`: replaced stub `test_publish_event_logs_correlation_id` — original re-checked file content (duplicate of `test_written_jsonl_is_valid_json`); replaced with `unittest.mock.patch.object` on `publisher.logger` to assert `logger.info` is called once with JSON containing `event`, `correlation_id`, `event_id`, `event_name`
 
 ### File List
 

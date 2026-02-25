@@ -45,6 +45,20 @@ class EventEnvelope(BaseModel, Generic[PayloadT]):
             raise ValueError(msg)
         return v
 
+    @field_validator("event_id")
+    @classmethod
+    def validate_event_id(cls, v: str) -> str:
+        """Enforce UUID v4 format for event IDs (consistent with correlation_id)."""
+        try:
+            parsed = uuid.UUID(v)
+        except ValueError:
+            raise ValueError(f"event_id must be a valid UUID, got {v!r}")
+        if parsed.version != 4:
+            raise ValueError(
+                f"event_id must be UUID v4, got version {parsed.version}"
+            )
+        return v
+
     @field_validator("correlation_id")
     @classmethod
     def validate_correlation_id(cls, v: str) -> str:

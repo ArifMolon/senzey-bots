@@ -68,13 +68,14 @@ def failure_from_domain_error(exc: Exception) -> CommandFailure:
     Falls back to INTERNAL_ERROR for non-domain exceptions.
     """
     from senzey_bots.core.errors.domain_errors import DomainError
+    from senzey_bots.core.errors.error_codes import INTERNAL_ERROR
 
     if isinstance(exc, DomainError):
         return failure(
             code=exc.code, message=exc.message, details=exc.details
         )
     return failure(
-        code="INTERNAL_ERROR",
+        code=INTERNAL_ERROR,
         message=str(exc),
     )
 

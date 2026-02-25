@@ -1,5 +1,6 @@
 """Unit tests for correlation ID propagation."""
 
+import asyncio
 import uuid
 from collections.abc import Generator
 
@@ -63,3 +64,37 @@ def test_set_correlation_id_returns_token_for_reset() -> None:
     # Reset to before first_id was set (which was None due to fixture)
     corr_module._correlation_id.reset(token)
     assert corr_module._correlation_id.get() is None
+
+
+def test_correlation_id_propagates_to_async_task() -> None:
+    """Child asyncio tasks inherit the parent context's correlation_id (AC#6)."""
+
+    async def run() -> tuple[str, str]:
+        parent_cid = new_correlation_id()
+
+        async def child() -> str:
+            return get_correlation_id()
+
+        child_cid = await asyncio.create_task(child())
+        return parent_cid, child_cid
+
+    parent_cid, child_cid = asyncio.run(run())
+    assert child_cid == parent_cid
+
+
+def test_correlation_id_isolated_in_child_async_task() -> None:
+    """A new correlation_id set in a child task does not affect the parent context (AC#6)."""
+
+    async def run() -> tuple[str, str, str]:
+        parent_cid = new_correlation_id()
+
+        async def child() -> str:
+            return new_correlation_id()  # generates new ID in child's context copy
+
+        child_cid = await asyncio.create_task(child())
+        after_cid = get_correlation_id()  # parent context must be unchanged
+        return parent_cid, child_cid, after_cid
+
+    parent_cid, child_cid, after_cid = asyncio.run(run())
+    assert child_cid != parent_cid
+    assert after_cid == parent_cid

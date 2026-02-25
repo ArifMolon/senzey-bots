@@ -125,3 +125,20 @@ def test_event_envelope_valid_names() -> None:
     for name in valid_names:
         env = _make_envelope(event_name=name)
         assert env.event_name == name
+
+
+def test_event_envelope_rejects_non_uuid_event_id() -> None:
+    with pytest.raises(PydanticValidationError):
+        _make_envelope(event_id="not-a-uuid")
+
+
+def test_event_envelope_rejects_non_v4_uuid_event_id() -> None:
+    uuid_v1 = "550e8400-e29b-11d4-a716-446655440000"
+    with pytest.raises(PydanticValidationError):
+        _make_envelope(event_id=uuid_v1)
+
+
+def test_event_envelope_accepts_explicit_uuid_v4_event_id() -> None:
+    explicit_id = str(uuid.uuid4())
+    env = _make_envelope(event_id=explicit_id)
+    assert env.event_id == explicit_id

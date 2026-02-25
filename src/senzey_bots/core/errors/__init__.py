@@ -13,6 +13,7 @@ from senzey_bots.core.errors.domain_errors import (
 from senzey_bots.core.errors.error_codes import (
     AUTHENTICATION_ERROR,
     BROKER_ERROR,
+    INTERNAL_ERROR,
     ORCHESTRATOR_ERROR,
     RISK_LIMIT_ERROR,
     SECRETS_ERROR,
@@ -31,6 +32,7 @@ __all__ = [
     "ValidationError",
     "AUTHENTICATION_ERROR",
     "BROKER_ERROR",
+    "INTERNAL_ERROR",
     "ORCHESTRATOR_ERROR",
     "RISK_LIMIT_ERROR",
     "SECRETS_ERROR",
