@@ -1,0 +1,5 @@
+[app]
+name = "senzey-bots"
+env = "development"
+debug = true
+streamlit_port = 8501

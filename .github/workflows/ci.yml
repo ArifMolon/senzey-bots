@@ -1,0 +1,17 @@
+name: CI
+
+# TODO: Implement full CI pipeline
+# This is a stub for Story 1.1 — implementation to follow in later stories
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO: Add lint, type-check, and test steps

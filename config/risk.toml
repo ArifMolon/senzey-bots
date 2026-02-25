@@ -1,0 +1,5 @@
+[risk]
+daily_drawdown_halt_pct = 5.0
+daily_drawdown_kill_pct = 10.0
+heartbeat_interval_sec = 60
+heartbeat_alert_after_sec = 300

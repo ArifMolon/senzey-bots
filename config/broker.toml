@@ -1,0 +1,6 @@
+[broker]
+provider = "ig"
+max_req_per_min = 30
+max_orders_per_min = 5
+buy_order_ttl_min = 10
+sell_order_ttl_min = 10

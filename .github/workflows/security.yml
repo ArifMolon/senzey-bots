@@ -1,0 +1,17 @@
+name: Security
+
+# TODO: Implement security scanning pipeline
+# This is a stub for Story 1.1 — implementation to follow in later stories
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 1'  # Weekly on Mondays
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO: Add dependency audit and SAST steps

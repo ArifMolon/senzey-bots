@@ -1,0 +1,1 @@
+"""IG Markets integration package."""
