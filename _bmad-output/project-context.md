@@ -1,29 +1,27 @@
 ---
-project_name: 'senzey-bots'
+project_name: 'trading-ig'
 user_name: 'Senzey'
 date: '2026-02-25'
-sections_completed: ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'quality_rules', 'workflow_rules', 'anti_patterns', 'prd_validation']
+sections_completed: ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'quality_rules', 'workflow_rules', 'anti_patterns', 'prd_validation', 'implementation_readiness', 'sprint_planning', 'documentation_compliance_audit']
 status: 'complete'
 rule_count: 32
 optimized_for_llm: true
 ---
 
-# Project Context for AI Agents: senzey-bots (Agentic Trading System)
+# Project Context for AI Agents: trading-ig
 
 _This file contains critical rules and patterns that AI agents must follow when implementing code in this project. Focus on unobvious details that agents might otherwise miss._
 
 **System Architecture Overview:**
-`senzey-bots` is an overarching Agentic Trading System. It orchestrates AI agents to generate strategies, run backtests, and execute trades. It utilizes two major existing/3rd-party projects as its foundation:
-1. **freqtrade**: Used purely as the trading engine, backtesting framework, and machine learning (FreqAI) provider.
-2. **trading-ig**: Used as the broker API wrapper to communicate with IG (REST and Streaming).
+`trading-ig` is a lightweight Python wrapper around IG Markets REST and Streaming APIs.
+For BMAD planning in this repository, treat `trading-ig` as the broker integration layer and keep any higher-level strategy/orchestration logic outside the core package boundaries.
 
 ---
 
 ## Technology Stack & Versions
 
-- **senzey-bots (Core System)**: Python >= 3.11, LLM Orchestration frameworks (BMAD, LangChain/OpenAI, etc.).
-- **Broker Integration (3rd Party - trading-ig)**: Python ^3.9, `requests` ^2.24, `requests-cache` ^0.5, `lightstreamer-client-lib` ^1.0.3, `pandas` ^2.
-- **Trading Engine (3rd Party - freqtrade)**: Python >= 3.11, `pandas`==2.3.3, `numpy`==2.4.2, `ccxt`==4.5.39, `freqai`, `hyperopt`, `fastapi`==0.129.0, `SQLAlchemy`==2.0.46.
+- **Repository Core (trading-ig)**: Python ^3.9, `requests` ^2.24, `requests-cache` ^0.5, `lightstreamer-client-lib` ^1.0.3, optional `pandas` support.
+- **Planning Context (adjacent systems)**: Freqtrade/Python >= 3.11 is treated as an external integration target for strategy execution flows in planning docs.
 
 ---
 
@@ -31,9 +29,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 ### Integration Boundaries & Workflow Rules
 
-- **Strict Separation of Concerns:** DO NOT modify the core source code of `freqtrade` (`freqtrade/freqtrade/...`) or `trading-ig` (`trading_ig/...`) unless fixing a critical bug. Treat them as external libraries/engines.
-- **Extensions Only:** All Freqtrade custom logic (strategies, hyperopts, FreqAI models) MUST be contained within the `freqtrade/user_data/` directory.
-- **Agentic Logic:** All higher-level AI orchestration, agent logic, and system coordination MUST be placed in dedicated `senzey-bots` directories, kept separate from the underlying engine cores.
+- **Repository Ownership:** `trading_ig/...` is this repository's core. Changes are allowed, but must preserve public API compatibility and include tests.
+- **Cross-Repo Separation:** Treat `freqtrade` and orchestration layers as external systems; do not mix their runtime concerns directly into `trading_ig` internals.
+- **Extension Placement:** Keep strategy/agent orchestration code outside this library; this repo should remain focused on broker API integration concerns.
 - **Configuration Management:** Do not check in `config.json` containing real API keys for IG or CCXT exchanges. Use `.env` or template files.
 
 ### Language-Specific Rules
@@ -79,7 +77,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 
 **For AI Agents:**
 - Read this file before implementing any code.
-- Acknowledge that `freqtrade` and `trading-ig` are tools for the `senzey-bots` system.
+- Acknowledge that this repository is the `trading-ig` broker integration layer.
 - Follow ALL rules exactly as documented.
 - When in doubt, prefer the more restrictive option.
 
