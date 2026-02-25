@@ -13,6 +13,13 @@ stepsCompleted:
   - step-09-functional
   - step-10-nonfunctional
   - step-11-polish
+  - step-e-01-discovery
+  - step-e-02-review
+  - step-e-03-edit
+lastEdited: '2026-02-25'
+editHistory:
+  - date: '2026-02-25'
+    changes: 'Added Risk & Profit Management guardrails, expanded scope to include CFD asset classes and Phase 2 ERC20 vision'
 classification:
   date: '2026-02-25'
   projectType: 'Web App'
@@ -60,10 +67,13 @@ Sistemi benzersiz kılan unsur, "Human-in-the-Loop" (Döngüdeki İnsan) prensib
 - İndikatör kurallarını Freqtrade stratejisine dönüştüren Kod Üretici LLM Ajanı.
 - Arayüz üzerinden backtest yapma ve sonuçları görüntüleme.
 - "Human in the loop" onayıyla IG broker üzerinden canlı (production) işlemlere başlama ve "Kill-Switch".
+- Varlık Sınıfları: IG Markets üzerinden Altın (Gold), Gümüş (Silver) ve Kripto Paralar (Bitcoin vb.) CFD işlemleri.
+- Sermaye Yönetimi: Aylık 10.000 TL bütçe enjeksiyonu ile test ve mikro-canlı (micro-live) aşamaları. (İlk 3 ay ROI zorunluluğu yok, öğrenme odaklı).
 
 ### Growth (Phase 2)
 - Test sonuçlarına dayanarak market/coin önerisi yapan analiz motoru.
 - Yeni ajan türleri için Agent Registry.
+- Phase 2: OpenZeppelin standartlarında (ERC20) kendi özel topluluk token'ımız için otomatik piyasa yapıcılık (market making) ve alım stratejileri (IG Markets dışı DEX/Web3 entegrasyonu gerektirir).
 
 ### Vision (Phase 3)
 - Haber/X (Twitter) üzerinden sentiment analizi yapan otonom araştırma ajanları.
@@ -86,6 +96,11 @@ Dış kaynaklı bir geliştirici sisteme strateji yükler. Sistem stratejiyi tes
 ## Domain-Specific Requirements
 
 ### Compliance & Constraints
+- **Fintech Compliance Matrix:**
+  - **PCI-DSS:** N/A (No card storage).
+  - **SOC2:** N/A (Personal internal tool).
+  - **GDPR:** Minimal (Single user).
+  - **AML/KYC:** IG Markets handles this at the broker level; this tool is exempt as it is strictly for personal execution.
 - **Kişisel Kullanım:** Platform kişisel kullanım amaçlıdır, dışarıya açık KYC/AML ihtiyacı yoktur.
 - **Secret Yönetimi:** IG Broker ve LLM API key'leri uzaktaki bir veritabanına kaydedilmeyecek, arayüzden adım adım alınarak yerel bir `SQLite` veritabanında şifreli (AES-256) tutulacaktır.
 - **Rate-Limits:** `freqtrade` motoruna entegre IG API sınırlarına tam uyulacak, by-pass edilmeyecektir.
@@ -104,6 +119,13 @@ Test (backtest) logları ve syntax hataları ajanlar arasında JSON formatında 
 - **İletişim Protokolü:** Streamlit uygulaması ve arka plandaki ajanlar/servisler arasındaki iletişim standart **MCP (Model Context Protocol)** üzerinden `stdio` veya yerel ağ `SSE/HTTP` ile sağlanacaktır.
 - **Kimlik Doğrulama:** Streamlit'in sunduğu basit bir parola veya Localhost/IP tabanlı erişim kısıtlaması uygulanacaktır.
 
+## Risk & Profit Management Architecture
+
+- **Profit Locking ("Kâr Cebe Yakışır"):** Varsayılan olarak agresif `minimal_roi` tablosu (ör: 30 dk içinde %5 kâr ise çık) ve `trailing_stop_positive_offset` (ör: %1 kârda izlemeye başla) uygulanır.
+- **Capital Protection:** Varsayılan günlük maksimum drawdown %5 olarak ayarlanır. Bu seviyeye ulaşılırsa o gün için yeni işlem açılması durdurulur (Halt).
+- **Staged Rollout:** Aylık 10.000 TL bütçe göz önüne alınarak, LLM stratejileri önce `dry_run` (14 gün), ardından 500-1000 TL'lik "Micro-live" aşaması, sonrasında tam sermaye tahsisi şeklinde kademelendirilir.
+- **CFD Margin Rules:** IG Markets üzerindeki işlemlerde pozisyon büyüklüğü hesabın serbest marjininin %50'sini aşamaz.
+
 ## Functional Requirements
 
 ### Strategy & Testing
@@ -121,6 +143,12 @@ Test (backtest) logları ve syntax hataları ajanlar arasında JSON formatında 
 - **FR8:** Kullanıcı, arayüz üzerinden aktif ajanların iletişim loglarını anlık izleyebilir.
 - **FR9:** Sistem, alt servisler arasında standart protokoller üzerinden görev ataması ve sonuç iletimi yapabilir.
 - **FR10:** Kullanıcı, API anahtarlarını arayüzden sisteme tanımlayabilir; sistem bunları yerel veritabanında şifreli saklar ve erişimi parola/IP ile kısıtlar.
+- **FR11:** Sistem, her strateji için zorunlu dinamik kâr alma (Trailing Stop-Loss) ve zamana bağlı kâr realizasyonu (Time-based ROI) kuralları uygular; kâra geçmiş bir pozisyonun başa baş (break-even) noktasının altına düşmesine izin vermez ("Kâr cebe yakışır" felsefesi).
+- **FR12:** Sistem, Freqtrade koruma eklentileri (MaxDrawdown, StoplossGuard, vb.) aracılığıyla otomatik devre kesici (circuit breaker) devreye alabilir.
+- **FR13:** Kullanıcı, her strateji için ayrı maksimum sermaye tavanı tanımlayabilir; sistem bu tavanı aşan emir girişimlerini reddeder.
+- **FR14:** LLM tarafından üretilen stratejiler canlıya alınmadan önce otomatik statik kod analizi (yasaklı kütüphane kontrolü) ve zorunlu backtest eşik doğrulamasından (Sharpe, Max Drawdown) geçer.
+- **FR15:** Yeni stratejiler canlı sermayeye geçmeden önce minimum 14 günlük zorunlu kuru çalışma (dry_run) sürecinden geçirilir.
+- **FR16:** IG Markets hesabındaki serbest marjin seviyesi izlenir; kritik eşiğin altına düştüğünde yeni pozisyon açılması engellenir.
 ## Security & Audit Architecture
 
 ### Data Flow & Access Controls
@@ -139,10 +167,16 @@ Test (backtest) logları ve syntax hataları ajanlar arasında JSON formatında 
 
 ### Performance & Reliability
 - **NFR1 (Execution Latency):** Arayüz üzerinden "Canlıya Al" emri verildiğinde, emrin IG Broker API'sine iletilme süresi (network gecikmesi hariç) 500 ms'nin altında olmalı ve bu durum APM/log analizleriyle ölçülmelidir.
-- **NFR2 (LLM Timeout):** Kod üretici ajanın indikatör kurallarını koda dönüştürme süresi maksimum 60 saniye olmalıdır.
+- **NFR2 (LLM Timeout):** Kod üretici ajanın indikatör kurallarını koda dönüştürme süresi maksimum 60 saniye olmalıdır, as measured by integration test timing.
 - **NFR3 (Uptime):** Freqtrade motoru ve Ajanlar, geçici ağ kesintilerinde en fazla 30 saniye içinde en az 5 kez otomatik yeniden bağlanmayı (auto-reconnect) denemeli ve bu durum sistem loglarıyla ölçülmelidir.
 - **NFR4 (Graceful Degradation):** LLM API yanıt vermediğinde, sistem 5 saniye içinde hata fırlatmadan manuel kod giriş arayüzüne (fallback) geçiş yapabilmeli ve bu durum entegrasyon testleriyle doğrulanmalıdır.
 
 ### Security & Integration
 - **NFR5 (Encryption):** Tüm API anahtarları yerel veritabanında AES-256 veya eşdeğer algoritmayla şifrelenmiş olarak (Data at Rest) tutulmalı ve bu durum kod incelemesiyle (code audit) doğrulanmalıdır.
-- **NFR6 (Rate Limits):** Sistem, IG Broker'ın saniyelik/dakikalık istek sınırlarını hiçbir koşulda aşmamalıdır ve bu durum API kullanım loglarıyla (API logs) doğrulanmalıdır.
+- **NFR6 (Rate Limits):** Sistem, IG Broker'ın saniyelik/dakikalık istek sınırlarını hiçbir koşulda aşmamalıdır (Dakikada max 30 request IG limitlerine uygun olarak) ve bu durum API kullanım loglarıyla (API logs) doğrulanmalıdır.
+- **NFR7 (Drawdown Protection):** Günlük drawdown -%5 eşiğini aştığında 24 saat yeni emir yasağı devreye girer; -%10 aştığında tüm açık pozisyonlar acil durum piyasa emriyle (market order) kapatılır.
+- **NFR8 (Broker Stoploss):** Broker tarafında (IG Markets) on-exchange stoploss (Garantili Stop veya Normal Stop) aktif olmalıdır; sistem çökmesi durumunda pozisyonlar korunmalıdır.
+- **NFR9 (Order Timeout):** Bekleyen (unfilled) alım emirleri 10 dakika, satış emirleri 30 dakika içinde otomatik olarak iptal edilir (zombie order prevention).
+- **NFR10 (Backtest Thresholds):** LLM stratejileri canlıya alınmadan önce backtest sonuçları şu eşikleri sağlamalıdır: Sharpe ≥ 0.5, Max Drawdown ≤ %25, Win Rate ≥ %35.
+- **NFR11 (System Heartbeat):** Sistem 60 saniyede bir heartbeat (sağlık) sinyali üretir; 120 saniye kesinti durumunda Telegram/E-posta üzerinden acil durum uyarısı gönderilir.
+- **NFR12 (Order Rate Limits):** Sistem IG Markets API'sine dakikada maksimum 10 emir (order) gönderecek şekilde rate-limit uygular ve aynı sinyal için mükerrer (duplicate) emir açılmasını engeller.
